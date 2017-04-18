@@ -18,15 +18,16 @@ public class UDPServerThreads {
     private static final int BUFFER_SIZE = 1024;
     private int outSeq=0;
     private List<Long> executionTimeList;
-    int port =1099;//test data
+    int ownPort =1099;//test data
     private DatagramSocket serverSocket;
     private Gson gson;
     private OrderProcessor processor;
-    private InetAddress IPAddress ;
+    private InetAddress remoteAddress ;
+    private int remotePort ;
     private boolean flag;
 
     public UDPServerThreads() throws SocketException {
-        serverSocket = new DatagramSocket(port);
+        serverSocket = new DatagramSocket(ownPort);
         processor = new OrderProcessor();
         gson = new Gson();
     }
@@ -42,13 +43,16 @@ public class UDPServerThreads {
 
              DatagramPacket receivePacket = new DatagramPacket(buffer, BUFFER_SIZE);
 
-             InetAddress IPAddress = receivePacket.getAddress();
+              //IPAddress = receivePacket.getAddress();
 
              while (true) {
 
                  try {
-
+                 Thread.sleep(500);
                  serverSocket.receive(receivePacket);
+                 remoteAddress = receivePacket.getAddress();
+                 remotePort= receivePacket.getPort();
+                 System.out.print("remoteAddress = "+remoteAddress+" remoteport = " + remotePort);
 
                  long startTime = System.nanoTime();//start measure latency
 
@@ -62,15 +66,20 @@ public class UDPServerThreads {
 
                  long latency = System.nanoTime()- startTime;//end measure latency
                  executionTimeList.add(latency);
+
                  LongSummaryStatistics statistics = executionTimeList.stream().mapToLong((x) -> x.longValue()).summaryStatistics();
                  System.out.println("Max = "+ statistics.getMax());
                  System.out.println("Min = "+ statistics.getMin());
                  System.out.println("Average = "+ statistics.getAverage());
                  System.out.println("Quantity = "+ statistics.getCount());
+
+                 flag=true;
              } catch (IOException e) {
                  e.printStackTrace();
-             }
-            flag=true;
+             } catch (InterruptedException e) {
+                     e.printStackTrace();
+                 }
+
              }
 
          }
@@ -83,14 +92,14 @@ public class UDPServerThreads {
             System.out.println("sender started!");
 
             while (true) {
-            //if(processor.getAggregatedData().size()>0){
-                try {
+//            if(processor.getAggregatedData().size()>0){
+               try {
 
                     OutMessage out_message = new OutMessage(++outSeq ,processor.getAggregatedData());
                     String sendString = gson.toJson(out_message);
 
                     byte[] sendData = sendString.getBytes("UTF-8");
-                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress , port);
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, remoteAddress , remotePort);
                     serverSocket.send(sendPacket);
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -101,15 +110,15 @@ public class UDPServerThreads {
                     e.printStackTrace();
                 }
 
-          //  }
-        }
+//            }
+       }
         }
     });
 
 
     public void start() {
         listener.start();
-        while(flag==false){
+        while(!flag){
             if(processor.getAggregatedData().size()>0) {
                 sender.start();
             }
