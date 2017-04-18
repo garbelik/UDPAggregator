@@ -5,92 +5,70 @@ import sun.misc.IOUtils;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.net.*;
 
-
-class UDPClient {
+public class UDPclient {
 
     private static DatagramSocket datagramSocket;
-
     private static final int BUFFER_SIZE = 1024;
     private static byte[] buffer;
+    public UDPclient() {
+
+    }
+
 
     public static void main(String[] args) {
-//        if (args.length != 2) {
-//            System.out.println("usage: java -jar JavaUDPClient.jar <IP address> <port>");
-//            System.exit(1);
-//        }
-        try {
+
+        try  {
+
             InetAddress inetAddress = InetAddress.getLocalHost();
-            int port =1099;
-            //Integer.parseInt(args[1]);
-
-
-
+            int serverport  =1099;
             InputStream is = new FileInputStream("src/incomingmsg1.txt");
             byte[] bytes = IOUtils.readFully(is,-1,true);
 
+            datagramSocket = new DatagramSocket(null);
+            InetSocketAddress address = new InetSocketAddress( 1300);
+            datagramSocket.bind(address);
 
-
-            datagramSocket = new DatagramSocket();
-
+            InputStream is1 = new FileInputStream("src/incomingmsg1.txt");
+            byte[] bytes1 = IOUtils.readFully(is1,-1,true);
             DatagramPacket out_datagramPacket = new DatagramPacket(
-                    bytes,
-                    bytes.length,
+                    bytes1,
+                    bytes1.length,
                     inetAddress,
-                    port);
+                    serverport);
 
-            datagramSocket.send(out_datagramPacket);
-
-//            buffer = new byte[BUFFER_SIZE];
-//            DatagramPacket in_datagramPacket =
-//                    new DatagramPacket(buffer, BUFFER_SIZE);
-//            datagramSocket.receive(in_datagramPacket);
-//
-//            String serverEcho = new String(
-//                    in_datagramPacket.getData(),
-//                    0,
-//                    in_datagramPacket.getLength());
-//            System.out.println(serverEcho);
-
+            for(int i=0;i<5;i++) {
+                datagramSocket.send(out_datagramPacket);
+            }
 
             InputStream is2 = new FileInputStream("src/incomingmsg2.txt");
             byte[] bytes2 = IOUtils.readFully(is2,-1,true);
 
 
-
-           // datagramSocket = new DatagramSocket();
-
-            DatagramPacket out_datagramPacket2 = new DatagramPacket( bytes2,bytes2.length, inetAddress, port);
+            DatagramPacket out_datagramPacket2 = new DatagramPacket(
+                    bytes2,
+                    bytes2.length,
+                    inetAddress,
+                    serverport);
 
             datagramSocket.send(out_datagramPacket2);
 
+            //Waiting for incoming messages with updated data
             buffer = new byte[BUFFER_SIZE];
-            DatagramPacket in_datagramPacket2 =
-                    new DatagramPacket(buffer, BUFFER_SIZE);
-            datagramSocket.receive(in_datagramPacket2);
+            DatagramPacket receivePacket = new DatagramPacket(buffer, BUFFER_SIZE);
+            while (true) {
 
-            String serverEcho2 = new String(
-                    in_datagramPacket2.getData(),
-                    0,
-                    in_datagramPacket2.getLength());
-            System.out.println(serverEcho2);
+                //DatagramPacket receivePacket = new DatagramPacket(buffer, BUFFER_SIZE);
+                datagramSocket.receive(receivePacket);
 
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SocketException ex) {
-            Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(UDPClient.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            datagramSocket.close();
+                String receivedMessage = new String(receivePacket.getData());
+                System.out.println(receivedMessage);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-
 }
