@@ -1,0 +1,32 @@
+{
+	"outSequenceNumber": 1,
+	"products": [{
+			"productId": "APPLE",
+			"buyLevels": [{
+					"price": 2,
+					"quantity": 5
+				},
+				{
+					"price": 1,
+					"quantity": 4
+				}
+			],
+			"sellLevels": [{
+				"price": 2,
+				"quantity": 3
+			}]
+		},
+		{
+			"productId": "PEAR",
+			"buyLevels": [
+
+			],
+			"sellLevels": [{
+				"price": 1,
+				"quantity": 1
+			}]
+
+
+		}
+	]
+}

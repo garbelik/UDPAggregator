@@ -1,0 +1,14 @@
+{
+	"inSequenceNumber": 2,
+	"messages": [{
+			"type": "changeOrder",
+			"orderId": 3,
+			"price": 2,
+			"quantity": 6
+		},
+		{
+			"type": "deleteOrder",
+			"orderId": 2
+		}
+	]
+}
